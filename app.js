@@ -6,20 +6,30 @@ app.use(express.static('public', {extensions: ['html']}));
 app.use(express.json());
 app.listen(80);
 
-app.get("/getresults", (request, response) => {
-    const barcodes = JSON.parse(request.query.barcodes);
+app.get("/cascadiaresults", (request, response) => {
+    let barcodes = undefined;
+    try {
+        barcodes = JSON.parse(request.query.barcodes);
+    } catch (x) {}
 
     if (!barcodes) {
-        response.sendStatus(400);
+        response.status(400).send("Bad Request");
         return;
     }
+
+    const dom = new JSDOM(`<!DOCTYPE html><head><meta name="description" content=""><meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no"><link rel="stylesheet" href="/normalize.css"><link rel="stylesheet" href="/main.css"><link href="https://fonts.googleapis.com/css?family=Open+Sans&display=swap" rel="stylesheet"><script src="/modernizr-3.8.0.min.js"></script><link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/css/bootstrap.min.css" integrity="sha384-Vkoo8x4CGsO3+Hhxv8T/Q5PaXtkKtu6ug5TOeNV6gBiFeWPGFN9MuhOf23Q9Ifjh" crossorigin="anonymous"><meta name="theme-color" content="#fafafa"></head><body><div class="row justify-content-md-center mt-5"><div class="container" id="resultscontainer"></div>`);
 
     const requests = barcodes.map((barcode) => GetResult(barcode));
 
     Promise.all(requests).then((responses) => {
-        var parsedResult = responses.map(response => parseResult(response));
-        response.send(parsedResult);
-    })
+        var parsedResults = responses.map(response => parseResult(response));
+        parsedResults.forEach(x => {
+            const resultDiv = dom.window.document.createElement("div");
+            resultDiv.innerHTML = x;
+            dom.window.document.getElementById("resultscontainer").appendChild(resultDiv);
+        })
+        response.send(dom.window.document.documentElement.outerHTML);
+    });
 });
 
 // Reads a result and extracts the Not Found Messaage or the Result Card info 
