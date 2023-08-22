@@ -24,6 +24,7 @@ app.get("/getresults", (request, response) => {
 
 // Reads a result and extracts the Not Found Messaage or the Result Card info 
 function parseResult(result) {
+    const dom = new JSDOM(result);
     let notRecievedNode = undefined;
 
     for (const node of dom.window.document.querySelectorAll('h4')) {
