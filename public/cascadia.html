@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<head>
+    <link rel="stylesheet" href="/index.css">
+</head>
+<h1>Cascadia Results</h1>
+<div>This is not officially affiliated with Cascadia study. This tool will request multiple results from the study <a href="https://securelink.labmed.uw.edu/cascadia/">result page</a> and format them all into a single page for you. We do not store any personal information on our servers, the barcodes and birthdate information are only kept in your local browser cache. No result information is tracked anywhere.</div>
+<div>Check out the source code, or host on your own computer: <a href="https://github.com/ivytechone/cascadia">https://github.com/ivytechone/cascadia</a></div>
+
+<body>
+    <table id="barcodetable">
+        <tr>
+            <th>Barcode</th>
+            <th>Birthdate</th>
+        </tr>
+    </table>
+
+    <div>
+        <button onclick="addRow()">Add row</button>
+        <button onclick="getResult()">Get Results</button>
+        <button onclick="doClear()">Clear</button>
+    </div>
+
+    <script>
+        const data = {count: 0, entries: []};
+        let isclearing = false;
+
+        function addRow(value) {
+            data.entries[data.count] = {barcode: '', birthdate: ''}; 
+            const table = document.getElementById("barcodetable");
+            const rowNode = document.createElement("tr");
+            const barcodeColumnNode = document.createElement("td");
+            const birthdateColumnNode = document.createElement("td");
+            const barcodeInputNode = document.createElement("input");
+            barcodeInputNode.setAttribute("onchange", `onChangeBarcode(${data.count}, this.value)`);
+            const birthdateInputNode = document.createElement("input");
+            birthdateInputNode.setAttribute("onchange", `onChangeBirthdate(${data.count}, this.value)`);
+            if (value) {
+                data.entries[data.count] = value;
+                barcodeInputNode.value = value.barcode;
+                   birthdateInputNode.value = value.birthdate;
+            }
+            barcodeColumnNode.appendChild(barcodeInputNode);
+            birthdateColumnNode.appendChild(birthdateInputNode);
+            rowNode.appendChild(barcodeColumnNode);
+            rowNode.appendChild(birthdateColumnNode);
+            table.appendChild(rowNode);
+            data.count = data.count + 1;
+        }
+
+        function onChangeBarcode(id, value) {
+            data.entries[id].barcode = value;
+        }
+
+        function onChangeBirthdate(id, value) {
+            data.entries[id].birthdate = value;
+        }
+
+        function doClear() {
+            isclearing = true;
+            window.localStorage.clear();
+            window.location.reload();
+        }
+
+        function formatBarcodes() {
+            return JSON.stringify(data.entries.map(x => [x.barcode, encodeURI(x.birthdate)]));
+        }
+
+        function getResult() {
+            window.location=`/results?barcodes=${formatBarcodes()}`
+        }
+
+
+        window.onbeforeunload = function () {
+            if (!isclearing) {
+                window.localStorage.setItem('data', JSON.stringify(data));
+            }            
+        }
+
+        const urlParams = new URLSearchParams(window.location.search);
+        const barcodes = JSON.parse(urlParams.get('barcodes'));
+
+        if (barcodes) {
+            barcodes.forEach(x => addRow({barcode: x[0], birthdate: x[1]}));
+        } else {
+            cacheData = JSON.parse(window.localStorage.getItem('data'));
+            if (cacheData) {
+                cacheData.entries.forEach(x => addRow(x));
+            } else {
+                addRow();
+            }
+        }
+    </script>
+</body>
+
