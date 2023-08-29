@@ -17,7 +17,7 @@ const streamToElastic = pinoElastic({
 const log = pino({level:'info'}, streamToElastic);
 log.info("appstart");
 
-app.listen(80);
+app.listen(8000);
 
 app.get("/cascadiaresults", (request, response) => {
     let barcodes = undefined;
