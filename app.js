@@ -8,7 +8,7 @@ app.use(express.static('public', {extensions: ['html']}));
 app.use(express.json());
 
 const streamToElastic = pinoElastic({
-    index: 'cascadiaResults',
+    index: 'cascadiaresults',
     node: 'http://localhost:9200',
     esVersion: 8,
     flushBytes: 1000,
