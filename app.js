@@ -2,8 +2,21 @@ const express = require(`express`);
 const jsdom = require('jsdom');
 const app = express();
 const { JSDOM } = jsdom;
+const pinoElastic = require('pino-elasticsearch')
+const pino = require('pino')
 app.use(express.static('public', {extensions: ['html']}));
 app.use(express.json());
+
+const streamToElastic = pinoElastic({
+    index: 'cascadiaResults',
+    node: 'http://localhost:9200',
+    esVersion: 8,
+    flushBytes: 1000,
+});
+
+const log = pino({level:'info'}, streamToElastic);
+log.info("appstart");
+
 app.listen(80);
 
 app.get("/cascadiaresults", (request, response) => {
@@ -14,6 +27,7 @@ app.get("/cascadiaresults", (request, response) => {
 
     if (!barcodes) {
         response.status(400).send("Bad Request");
+        log.warn("badrequest")
         return;
     }
 
@@ -28,6 +42,7 @@ app.get("/cascadiaresults", (request, response) => {
             resultDiv.innerHTML = x;
             dom.window.document.getElementById("resultscontainer").appendChild(resultDiv);
         })
+        log.info("getresults");
         response.send(dom.window.document.documentElement.outerHTML);
     });
 });
