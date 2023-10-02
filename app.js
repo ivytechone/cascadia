@@ -17,9 +17,9 @@ app.use(express.json());
 const log = pino({level:'info'}, streamToElastic);
 log.info("appstart");
 */
-app.listen(8000);
+app.listen(80);
 
-app.get("/cascadiaresults", (request, response) => {
+app.get("/results", (request, response) => {
     let barcodes = undefined;
     try {
         barcodes = JSON.parse(request.query.barcodes);
